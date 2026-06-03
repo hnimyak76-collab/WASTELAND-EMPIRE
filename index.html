@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WASTELAND EMPIRE</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Russo+One&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
     --bg: #0a0a08;
@@ -19,9 +20,9 @@
     --red: #cc3333;
     --tap-glow: rgba(200,168,75,0.35);
   }
-
+ 
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
+ 
   body {
     background: var(--bg);
     color: var(--text);
@@ -30,7 +31,7 @@
     overflow-x: hidden;
     user-select: none;
   }
-
+ 
   /* SCANLINE OVERLAY */
   body::before {
     content:'';
@@ -40,7 +41,7 @@
     pointer-events:none;
     z-index:1000;
   }
-
+ 
   /* HEADER */
   .header {
     background: linear-gradient(180deg, #1a1a0e 0%, #0e0e08 100%);
@@ -51,14 +52,14 @@
     z-index: 100;
     box-shadow: 0 4px 20px rgba(200,168,75,0.15);
   }
-
+ 
   .header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
   }
-
+ 
   .game-title {
     font-family: 'Bebas Neue', cursive;
     font-size: 22px;
@@ -66,7 +67,7 @@
     color: var(--accent);
     text-shadow: 0 0 20px rgba(200,168,75,0.6), 0 0 40px rgba(200,168,75,0.2);
   }
-
+ 
   .day-badge {
     font-size: 11px;
     color: var(--muted);
@@ -74,14 +75,81 @@
     padding: 3px 8px;
     border-radius: 2px;
   }
-
+ 
+  /* PLAYER PROFILE */
+  .player-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 10px;
+    margin-bottom: 8px;
+  }
+ 
+  .player-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    overflow: hidden;
+  }
+ 
+  .player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+ 
+  .player-info { flex: 1; min-width: 0; }
+ 
+  .player-name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+ 
+  .player-id {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+ 
+  .player-rank {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 13px;
+    color: var(--accent);
+    text-align: right;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+ 
+  .player-rank-label {
+    font-size: 8px;
+    color: var(--muted);
+    display: block;
+    letter-spacing: 1px;
+  }
+ 
   /* RESOURCES BAR */
   .resources {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
   }
-
+ 
   .res {
     background: rgba(0,0,0,0.4);
     border: 1px solid var(--border);
@@ -89,7 +157,7 @@
     padding: 5px 6px;
     text-align: center;
   }
-
+ 
   .res-icon { font-size: 14px; display: block; }
   .res-val {
     font-family: 'Russo One', sans-serif;
@@ -100,7 +168,7 @@
   }
   .res-name { font-size: 8px; color: var(--muted); letter-spacing: 1px; }
   .res-rate { font-size: 8px; color: var(--accent3); }
-
+ 
   /* TAB BAR */
   .tabs {
     display: flex;
@@ -110,7 +178,7 @@
     top: 90px;
     z-index: 99;
   }
-
+ 
   .tab {
     flex: 1;
     padding: 10px 4px;
@@ -123,19 +191,19 @@
     transition: all 0.2s;
     text-transform: uppercase;
   }
-
+ 
   .tab.active {
     color: var(--accent);
     border-bottom-color: var(--accent);
     background: rgba(200,168,75,0.05);
   }
-
+ 
   .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
-
+ 
   /* SCREENS */
   .screen { display: none; padding: 14px; }
   .screen.active { display: block; }
-
+ 
   /* TAP ZONE */
   .tap-zone {
     display: flex;
@@ -143,7 +211,7 @@
     align-items: center;
     padding: 20px 0 10px;
   }
-
+ 
   .tap-btn {
     width: 180px;
     height: 180px;
@@ -161,12 +229,12 @@
     flex-direction: column;
     -webkit-tap-highlight-color: transparent;
   }
-
+ 
   .tap-btn:active {
     transform: scale(0.93);
     box-shadow: 0 0 50px rgba(200,168,75,0.6), inset 0 0 20px rgba(200,168,75,0.1);
   }
-
+ 
   .tap-city-emoji { font-size: 60px; filter: drop-shadow(0 0 10px rgba(200,168,75,0.4)); }
   .tap-label {
     font-family: 'Bebas Neue', cursive;
@@ -175,23 +243,23 @@
     color: var(--accent);
     margin-top: 4px;
   }
-
+ 
   .tap-info {
     margin-top: 16px;
     text-align: center;
   }
-
+ 
   .tap-power {
     font-family: 'Bebas Neue', cursive;
     font-size: 28px;
     color: var(--accent);
     letter-spacing: 2px;
   }
-
+ 
   .tap-power span { color: var(--accent2); }
-
+ 
   .tap-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
-
+ 
   /* FLOAT NUMBERS */
   .float-num {
     position: fixed;
@@ -204,18 +272,18 @@
     animation: floatUp 1s ease-out forwards;
     font-weight: bold;
   }
-
+ 
   @keyframes floatUp {
     0% { opacity:1; transform: translateY(0) scale(1); }
     100% { opacity:0; transform: translateY(-80px) scale(1.3); }
   }
-
+ 
   /* PROGRESS BAR */
   .level-bar-wrap {
     margin: 14px 0 6px;
     width: 100%;
   }
-
+ 
   .level-label {
     display: flex;
     justify-content: space-between;
@@ -224,7 +292,7 @@
     margin-bottom: 5px;
     letter-spacing: 1px;
   }
-
+ 
   .level-bar {
     height: 8px;
     background: #1a1a0e;
@@ -232,7 +300,7 @@
     border-radius: 2px;
     overflow: hidden;
   }
-
+ 
   .level-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--accent2), var(--accent));
@@ -240,7 +308,7 @@
     transition: width 0.4s ease;
     box-shadow: 0 0 8px rgba(200,168,75,0.5);
   }
-
+ 
   /* BUILDINGS */
   .section-title {
     font-family: 'Bebas Neue', cursive;
@@ -251,13 +319,13 @@
     border-bottom: 1px solid var(--border);
     padding-bottom: 6px;
   }
-
+ 
   .buildings-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
-
+ 
   .building-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -270,7 +338,7 @@
     overflow: hidden;
     transition: border-color 0.2s;
   }
-
+ 
   .building-card.affordable { border-color: rgba(200,168,75,0.4); }
   .building-card.affordable::before {
     content:'';
@@ -278,9 +346,9 @@
     inset:0;
     background: linear-gradient(90deg, rgba(200,168,75,0.04), transparent);
   }
-
+ 
   .building-card.maxed { opacity: 0.5; }
-
+ 
   .b-icon {
     font-size: 36px;
     width: 50px;
@@ -288,27 +356,27 @@
     flex-shrink: 0;
     filter: drop-shadow(0 0 6px rgba(200,168,75,0.3));
   }
-
+ 
   .b-info { flex: 1; min-width: 0; }
-
+ 
   .b-name {
     font-family: 'Russo One', sans-serif;
     font-size: 13px;
     color: var(--text);
     margin-bottom: 2px;
   }
-
+ 
   .b-desc { font-size: 10px; color: var(--muted); margin-bottom: 6px; }
-
+ 
   .b-stats {
     display: flex;
     gap: 10px;
     font-size: 10px;
   }
-
+ 
   .b-owned { color: var(--accent); }
   .b-rate { color: var(--accent3); }
-
+ 
   .b-buy {
     flex-shrink: 0;
     background: linear-gradient(135deg, #1e1a0a, #2a2410);
@@ -324,12 +392,12 @@
     text-align: center;
     min-width: 70px;
   }
-
+ 
   .b-buy:active { background: rgba(200,168,75,0.15); transform: scale(0.96); }
   .b-buy.disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--muted); color: var(--muted); }
-
+ 
   .b-cost { font-size: 11px; display: block; }
-
+ 
   /* CITY VISUAL */
   .city-view {
     background: linear-gradient(180deg, #0d1a12 0%, #081008 100%);
@@ -342,14 +410,14 @@
     position: relative;
     overflow: hidden;
   }
-
+ 
   .city-skyline {
     font-size: 28px;
     letter-spacing: 4px;
     line-height: 1.2;
     filter: drop-shadow(0 0 8px rgba(75,186,122,0.4));
   }
-
+ 
   .city-name {
     font-family: 'Bebas Neue', cursive;
     font-size: 15px;
@@ -357,20 +425,20 @@
     color: var(--accent3);
     margin-top: 6px;
   }
-
+ 
   .city-pop {
     font-size: 10px;
     color: var(--muted);
     margin-top: 3px;
   }
-
+ 
   /* UPGRADES */
   .upgrades-grid {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-
+ 
   .upgrade-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -380,13 +448,13 @@
     align-items: center;
     gap: 10px;
   }
-
+ 
   .upg-icon { font-size: 24px; flex-shrink: 0; }
-
+ 
   .upg-info { flex: 1; }
   .upg-name { font-size: 12px; color: var(--text); margin-bottom: 2px; font-family: 'Russo One', sans-serif; }
   .upg-desc { font-size: 10px; color: var(--muted); }
-
+ 
   .upg-btn {
     background: linear-gradient(135deg, #1a0d0d, #2a1010);
     border: 1px solid var(--accent2);
@@ -401,11 +469,11 @@
     text-align: center;
     transition: all 0.15s;
   }
-
+ 
   .upg-btn:active { background: rgba(224,95,42,0.15); transform: scale(0.96); }
   .upg-btn.disabled { opacity: 0.3; cursor: not-allowed; }
   .upg-btn.bought { border-color: var(--accent3); color: var(--accent3); opacity: 0.6; cursor: default; }
-
+ 
   /* LEADERBOARD */
   .lb-entry {
     background: var(--card);
@@ -417,9 +485,9 @@
     gap: 12px;
     margin-bottom: 8px;
   }
-
+ 
   .lb-entry.mine { border-color: var(--accent); background: rgba(200,168,75,0.06); }
-
+ 
   .lb-rank {
     font-family: 'Bebas Neue', cursive;
     font-size: 20px;
@@ -427,12 +495,12 @@
     width: 28px;
     text-align: center;
   }
-
+ 
   .lb-rank.top { color: var(--accent); text-shadow: 0 0 10px rgba(200,168,75,0.5); }
-
+ 
   .lb-name { flex: 1; font-size: 12px; color: var(--text); }
   .lb-score { font-family: 'Russo One', sans-serif; font-size: 13px; color: var(--accent3); }
-
+ 
   /* STARS SHOP */
   .stars-banner {
     background: linear-gradient(135deg, #1a1005 0%, #0d0a02 100%);
@@ -444,7 +512,7 @@
     position: relative;
     overflow: hidden;
   }
-
+ 
   .stars-banner::before {
     content: '✦ ✦ ✦';
     position: absolute;
@@ -455,7 +523,7 @@
     opacity: 0.4;
     letter-spacing: 8px;
   }
-
+ 
   .stars-title {
     font-family: 'Bebas Neue', cursive;
     font-size: 22px;
@@ -463,16 +531,16 @@
     color: var(--accent);
     margin-top: 10px;
   }
-
+ 
   .stars-sub { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
-
+ 
   .shop-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-bottom: 16px;
   }
-
+ 
   .shop-item {
     background: var(--card);
     border: 1px solid var(--border);
@@ -484,9 +552,9 @@
     position: relative;
     overflow: hidden;
   }
-
+ 
   .shop-item:active { transform: scale(0.96); border-color: var(--accent); }
-
+ 
   .shop-item-icon { font-size: 32px; display: block; margin-bottom: 6px; }
   .shop-item-name { font-size: 11px; color: var(--text); margin-bottom: 4px; font-family: 'Russo One', sans-serif; }
   .shop-item-desc { font-size: 9px; color: var(--muted); margin-bottom: 8px; }
@@ -501,7 +569,7 @@
     letter-spacing: 1px;
     display: inline-block;
   }
-
+ 
   .badge-hot {
     position: absolute;
     top: 8px; right: 8px;
@@ -513,7 +581,7 @@
     font-family: 'Bebas Neue', cursive;
     letter-spacing: 1px;
   }
-
+ 
   /* NOTIFICATION */
   .notif {
     position: fixed;
@@ -532,22 +600,22 @@
     max-width: 90vw;
     text-align: center;
   }
-
+ 
   .notif.show { transform: translateX(-50%) translateY(0); }
-
+ 
   /* PULSE ANIMATION */
   @keyframes pulse {
     0%,100% { opacity:1; }
     50% { opacity:0.5; }
   }
-
+ 
   .pulse { animation: pulse 2s infinite; }
-
+ 
   /* SCROLL */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); }
-
+ 
   /* CITY STAGES */
   .city-stage-label {
     font-size: 9px;
@@ -559,9 +627,21 @@
 </style>
 </head>
 <body>
-
+ 
 <!-- HEADER -->
 <div class="header">
+  <!-- PLAYER PROFILE BAR -->
+  <div class="player-bar" id="playerBar">
+    <div class="player-avatar" id="playerAvatar">☢</div>
+    <div class="player-info">
+      <div class="player-name" id="playerName">ВЫЖИВШИЙ...</div>
+      <div class="player-id" id="playerId">ID: —</div>
+    </div>
+    <div class="player-rank">
+      <span class="player-rank-label">СТАТУС</span>
+      <span id="playerRankLabel">НОВИЧОК</span>
+    </div>
+  </div>
   <div class="header-top">
     <div class="game-title">☢ WASTELAND EMPIRE</div>
     <div class="day-badge" id="dayBadge">ДЕНЬ 1</div>
@@ -593,7 +673,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="switchTab('tap')">
@@ -612,7 +692,7 @@
     <span class="tab-icon">⭐</span>STARS
   </div>
 </div>
-
+ 
 <!-- TAP SCREEN -->
 <div class="screen active" id="screen-tap">
   <div class="city-view">
@@ -621,7 +701,7 @@
     <div class="city-name" id="cityName">БЕЗЫМЯННАЯ ПУСТОШЬ</div>
     <div class="city-pop" id="cityPop">Выживших: 0</div>
   </div>
-
+ 
   <div class="tap-zone">
     <button class="tap-btn" id="tapBtn" ontouchstart="doTap(event)" onclick="doTap(event)">
       <span class="tap-city-emoji" id="tapEmoji">☢️</span>
@@ -640,25 +720,25 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- BUILD SCREEN -->
 <div class="screen" id="screen-build">
   <div class="section-title">⚙ СТРОИТЕЛЬСТВО</div>
   <div class="buildings-grid" id="buildingsGrid"></div>
 </div>
-
+ 
 <!-- UPGRADE SCREEN -->
 <div class="screen" id="screen-upgrade">
   <div class="section-title">🔬 ТЕХНОЛОГИИ</div>
   <div class="upgrades-grid" id="upgradesGrid"></div>
 </div>
-
+ 
 <!-- WORLD SCREEN -->
 <div class="screen" id="screen-world">
   <div class="section-title">🏆 РЕЙТИНГ ВЫЖИВШИХ</div>
   <div id="leaderboard"></div>
 </div>
-
+ 
 <!-- SHOP SCREEN -->
 <div class="screen" id="screen-shop">
   <div class="stars-banner">
@@ -670,10 +750,10 @@
     ПОКУПКИ ЧЕРЕЗ TELEGRAM STARS · БЕЗОПАСНО
   </div>
 </div>
-
+ 
 <!-- NOTIFICATION -->
 <div class="notif" id="notif"></div>
-
+ 
 <script>
 // ===== GAME STATE =====
 const G = {
@@ -687,7 +767,7 @@ const G = {
   xpNext: 100,
   lastTick: Date.now(),
 };
-
+ 
 // ===== BUILDINGS =====
 const BUILDINGS = [
   {
@@ -739,7 +819,7 @@ const BUILDINGS = [
     unlockLevel: 5,
   },
 ];
-
+ 
 // ===== UPGRADES =====
 const UPGRADES = [
   { id: 'u1', icon: '🦺', name: 'Защитные перчатки', desc: 'Тап дает +2 лома', cost: { scraps: 100 }, bought: false, effect: () => { G.tapPower += 2; }, unlockLevel: 1 },
@@ -751,7 +831,7 @@ const UPGRADES = [
   { id: 'u7', icon: '🤖', name: 'Автоматика', desc: 'Тап дает x5 лома', cost: { scraps: 3000, energy: 50 }, bought: false, effect: () => { G.tapPower *= 5; }, unlockLevel: 5 },
   { id: 'u8', icon: '🧬', name: 'Мутация', desc: 'Все производство x1.5', cost: { scraps: 5000, water: 500, energy: 100 }, bought: false, effect: () => { BUILDINGS.forEach(b => { Object.keys(b.production).forEach(k => { if(b.production[k] > 0) b.production[k] *= 1.5; }); }); }, unlockLevel: 6 },
 ];
-
+ 
 // ===== LEVELS =====
 const LEVELS = [
   { level:1, name:'ВЫЖИВШИЙ', xp:0, emoji:'☢️', cityEmoji:'🪨💀🪨', stage:'РУИНЫ', cityName:'БЕЗЫМЯННАЯ ПУСТОШЬ' },
@@ -762,7 +842,7 @@ const LEVELS = [
   { level:6, name:'АРХИТЕКТОР', xp:3000, emoji:'🏙️', cityEmoji:'🏙️🏛️🏙️', stage:'МЕТРОПОЛИС', cityName:'ИМПЕРИЯ ПУСТОШИ' },
   { level:7, name:'ИМПЕРАТОР', xp:6000, emoji:'👑', cityEmoji:'🏙️🏰🏙️', stage:'СТОЛИЦА', cityName:'☢ ВЕЧНЫЙ ГОРОД ☢' },
 ];
-
+ 
 // ===== SHOP =====
 const SHOP_ITEMS = [
   { icon:'⚡', name:'УСКОРИТЕЛЬ', desc:'x2 к производству на 1 час', price:'50 ⭐', hot:true },
@@ -772,7 +852,7 @@ const SHOP_ITEMS = [
   { icon:'🛡️', name:'ЗАЩИТА', desc:'Защита от рейдов на 7 дней', price:'40 ⭐', hot:false },
   { icon:'👑', name:'VIP СТАТУС', desc:'x2 ко всему навсегда', price:'500 ⭐', hot:false },
 ];
-
+ 
 // ===== LEADERBOARD (mock) =====
 const LB_DATA = [
   { name:'💀 xDeathWalker', score:'48,320', rank:1 },
@@ -786,29 +866,29 @@ const LB_DATA = [
   { name:'🔥 AshRunner', score:'6,200', rank:9 },
   { name:'👤 ТЫ (Игрок)', score: '–', rank:10, mine:true },
 ];
-
+ 
 // ===== HELPERS =====
 function fmt(n) {
   if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
   if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
   return Math.floor(n).toString();
 }
-
+ 
 function canAfford(cost) {
   return Object.entries(cost).every(([r,v]) => G[r] >= v);
 }
-
+ 
 function spend(cost) {
   Object.entries(cost).forEach(([r,v]) => G[r] -= v);
 }
-
+ 
 function getBuildingCost(b) {
   const mult = Math.pow(1.18, b.owned);
   const result = {};
   Object.entries(b.baseCost).forEach(([r,v]) => result[r] = Math.floor(v * mult));
   return result;
 }
-
+ 
 // ===== TAP =====
 function doTap(e) {
   e.preventDefault();
@@ -817,7 +897,7 @@ function doTap(e) {
   G.tapCount++;
   G.xp += 1;
   checkLevel();
-
+ 
   // Float number
   const touches = e.touches;
   let x, y;
@@ -829,7 +909,7 @@ function doTap(e) {
   spawnFloat(x, y, `+${G.tapPower}`);
   updateUI();
 }
-
+ 
 function spawnFloat(x, y, text) {
   const el = document.createElement('div');
   el.className = 'float-num';
@@ -839,7 +919,7 @@ function spawnFloat(x, y, text) {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1000);
 }
-
+ 
 // ===== LEVEL =====
 function checkLevel() {
   const next = LEVELS.find(l => l.level === G.level + 1);
@@ -853,13 +933,13 @@ function checkLevel() {
     renderUpgrades();
   }
 }
-
+ 
 // ===== TICK =====
 setInterval(() => {
   const now = Date.now();
   const dt = (now - G.lastTick) / 1000;
   G.lastTick = now;
-
+ 
   // Production from buildings
   BUILDINGS.forEach(b => {
     if (b.owned <= 0) return;
@@ -867,26 +947,26 @@ setInterval(() => {
       G[r] = Math.max(0, G[r] + rate * b.owned * dt);
     });
   });
-
+ 
   // Cap resources
   G.scraps = Math.min(G.scraps, 9999999);
   G.water = Math.min(G.water, 9999999);
   G.energy = Math.min(G.energy, 9999999);
   G.pop = Math.min(G.pop, 99999);
-
+ 
   // Day counter
   G.day = Math.floor(G.tapCount / 50) + 1;
-
+ 
   updateUI();
 }, 200);
-
+ 
 // ===== UI UPDATE =====
 function updateUI() {
   document.getElementById('res-scraps').textContent = fmt(G.scraps);
   document.getElementById('res-water').textContent = fmt(G.water);
   document.getElementById('res-energy').textContent = fmt(G.energy);
   document.getElementById('res-pop').textContent = fmt(G.pop);
-
+ 
   // Rates
   let rates = { scraps:0, water:0, energy:0, pop:0 };
   BUILDINGS.forEach(b => {
@@ -897,10 +977,10 @@ function updateUI() {
   document.getElementById('rate-water').textContent = (rates.water >= 0 ? '+' : '') + rates.water.toFixed(1) + '/с';
   document.getElementById('rate-energy').textContent = (rates.energy >= 0 ? '+' : '') + rates.energy.toFixed(1) + '/с';
   document.getElementById('rate-pop').textContent = (rates.pop >= 0 ? '+' : '') + rates.pop.toFixed(1) + '/с';
-
+ 
   document.getElementById('tapPower').textContent = G.tapPower;
   document.getElementById('dayBadge').textContent = 'ДЕНЬ ' + G.day;
-
+ 
   // Level
   const curLvl = LEVELS.find(l => l.level === G.level) || LEVELS[0];
   const nextLvl = LEVELS.find(l => l.level === G.level + 1);
@@ -910,14 +990,14 @@ function updateUI() {
   document.getElementById('levelLabel').textContent = `УР.${G.level} — ${curLvl.name}`;
   document.getElementById('levelPct').textContent = pct + '%';
   document.getElementById('levelFill').style.width = pct + '%';
-
+ 
   // City view
   document.getElementById('citySkyline').textContent = curLvl.cityEmoji;
   document.getElementById('cityName').textContent = curLvl.cityName;
   document.getElementById('cityStageLabel').textContent = curLvl.stage;
   document.getElementById('cityPop').textContent = 'Выживших: ' + fmt(G.pop) + (G.pop < 1 ? ' — пусто...' : '');
   document.getElementById('tapEmoji').textContent = curLvl.emoji;
-
+ 
   // Building afford highlights
   document.querySelectorAll('.building-card').forEach(card => {
     const id = card.dataset.id;
@@ -930,7 +1010,7 @@ function updateUI() {
     btn.classList.toggle('disabled', !can);
   });
 }
-
+ 
 // ===== RENDER BUILDINGS =====
 function renderBuildings() {
   const grid = document.getElementById('buildingsGrid');
@@ -942,7 +1022,7 @@ function renderBuildings() {
     const prodStr = Object.entries(b.production).map(([r,v]) => (v>0?'+':'')+v.toFixed(1)+({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)+'/с').join(' ');
     const can = canAfford(cost) && b.owned < b.maxOwned;
     const maxed = b.owned >= b.maxOwned;
-
+ 
     const card = document.createElement('div');
     card.className = 'building-card' + (can ? ' affordable' : '') + (maxed ? ' maxed' : '');
     card.dataset.id = b.id;
@@ -963,7 +1043,7 @@ function renderBuildings() {
     grid.appendChild(card);
   });
 }
-
+ 
 function buyBuilding(id) {
   const b = BUILDINGS.find(x => x.id === id);
   if (!b || b.owned >= b.maxOwned) return;
@@ -977,7 +1057,7 @@ function buyBuilding(id) {
   renderBuildings();
   updateUI();
 }
-
+ 
 // ===== RENDER UPGRADES =====
 function renderUpgrades() {
   const grid = document.getElementById('upgradesGrid');
@@ -986,7 +1066,7 @@ function renderUpgrades() {
     if (u.unlockLevel > G.level) return;
     const can = canAfford(u.cost) && !u.bought;
     const costStr = Object.entries(u.cost).map(([r,v]) => fmt(v) + ({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)).join(' + ');
-
+ 
     const card = document.createElement('div');
     card.className = 'upgrade-card';
     card.innerHTML = `
@@ -1002,7 +1082,7 @@ function renderUpgrades() {
     grid.appendChild(card);
   });
 }
-
+ 
 function buyUpgrade(id) {
   const u = UPGRADES.find(x => x.id === id);
   if (!u || u.bought || !canAfford(u.cost)) return;
@@ -1013,7 +1093,7 @@ function buyUpgrade(id) {
   renderUpgrades();
   updateUI();
 }
-
+ 
 // ===== RENDER LEADERBOARD =====
 function renderLeaderboard() {
   const lb = document.getElementById('leaderboard');
@@ -1025,7 +1105,7 @@ function renderLeaderboard() {
     </div>
   `).join('');
 }
-
+ 
 // ===== RENDER SHOP =====
 function renderShop() {
   const grid = document.getElementById('shopGrid');
@@ -1039,11 +1119,11 @@ function renderShop() {
     </div>
   `).join('');
 }
-
+ 
 function buyStars(name, price) {
   showNotif(`⭐ Покупка "${name}" (${price}) — Telegram Stars`);
 }
-
+ 
 // ===== NOTIFICATION =====
 function showNotif(msg) {
   const el = document.getElementById('notif');
@@ -1051,24 +1131,84 @@ function showNotif(msg) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2500);
 }
-
+ 
 // ===== TAB SWITCHING =====
 function switchTab(tab) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('screen-' + tab).classList.add('active');
   event.currentTarget.classList.add('active');
-
+ 
   if (tab === 'build') renderBuildings();
   if (tab === 'upgrade') renderUpgrades();
   if (tab === 'world') renderLeaderboard();
   if (tab === 'shop') renderShop();
 }
-
+ 
 // ===== INIT =====
 renderBuildings();
 renderUpgrades();
 updateUI();
+ 
+// ===== TELEGRAM SDK =====
+const tg = window.Telegram?.WebApp;
+let tgUser = null;
+ 
+function initTelegram() {
+  if (!tg) {
+    // Браузер — показываем заглушку
+    setPlayerUI('ВЫЖИВШИЙ', null, 'browser');
+    return;
+  }
+ 
+  tg.ready();
+  tg.expand(); // Раскрыть на весь экран
+ 
+  const user = tg.initDataUnsafe?.user;
+  if (user) {
+    tgUser = user;
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Выживший';
+    const photoUrl = user.photo_url || null;
+    const userId = user.id ? 'ID: ' + user.id : 'ID: —';
+    setPlayerUI(name, photoUrl, userId);
+  } else {
+    setPlayerUI('ВЫЖИВШИЙ', null, 'ID: —');
+  }
+}
+ 
+function setPlayerUI(name, photoUrl, userId) {
+  document.getElementById('playerName').textContent = name.toUpperCase();
+  document.getElementById('playerId').textContent = userId;
+ 
+  const avatarEl = document.getElementById('playerAvatar');
+  if (photoUrl) {
+    avatarEl.innerHTML = `<img src="${photoUrl}" alt="avatar" onerror="this.parentElement.innerHTML='☢'">`;
+  } else {
+    // Генерируем инициалы
+    const initials = name.split(' ').map(w => w[0]).slice(0,2).join('');
+    avatarEl.innerHTML = `<span style="font-family:'Russo One',sans-serif;font-size:14px;color:var(--accent)">${initials || '☢'}</span>`;
+  }
+}
+ 
+// Обновляем статус игрока при смене уровня
+const _origCheckLevel = checkLevel;
+function checkLevel() {
+  _origCheckLevel();
+  const curLvl = LEVELS.find(l => l.level === G.level) || LEVELS[0];
+  const rankEl = document.getElementById('playerRankLabel');
+  if (rankEl) rankEl.textContent = curLvl.name;
+}
+ 
+// Обновляем статус в UI
+function updatePlayerRank() {
+  const curLvl = LEVELS.find(l => l.level === G.level) || LEVELS[0];
+  const rankEl = document.getElementById('playerRankLabel');
+  if (rankEl) rankEl.textContent = curLvl.name;
+}
+ 
+setInterval(updatePlayerRank, 1000);
+initTelegram();
 </script>
 </body>
 </html>
+ 
