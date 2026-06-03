@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WASTELAND EMPIRE</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Russo+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a08;
+    --surface: #111109;
+    --card: #161610;
+    --border: #2a2a1a;
+    --accent: #c8a84b;
+    --accent2: #e05f2a;
+    --accent3: #4bba7a;
+    --text: #d4c89a;
+    --muted: #6b6244;
+    --red: #cc3333;
+    --tap-glow: rgba(200,168,75,0.35);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events:none;
+    z-index:1000;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(180deg, #1a1a0e 0%, #0e0e08 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 10px 14px 8px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(200,168,75,0.15);
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .game-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(200,168,75,0.6), 0 0 40px rgba(200,168,75,0.2);
+  }
+
+  .day-badge {
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  /* RESOURCES BAR */
+  .resources {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .res {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 5px 6px;
+    text-align: center;
+  }
+
+  .res-icon { font-size: 14px; display: block; }
+  .res-val {
+    font-family: 'Russo One', sans-serif;
+    font-size: 13px;
+    color: var(--accent);
+    display: block;
+    line-height: 1.2;
+  }
+  .res-name { font-size: 8px; color: var(--muted); letter-spacing: 1px; }
+  .res-rate { font-size: 8px; color: var(--accent3); }
+
+  /* TAB BAR */
+  .tabs {
+    display: flex;
+    background: #0d0d08;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 90px;
+    z-index: 99;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(200,168,75,0.05);
+  }
+
+  .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  /* SCREENS */
+  .screen { display: none; padding: 14px; }
+  .screen.active { display: block; }
+
+  /* TAP ZONE */
+  .tap-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0 10px;
+  }
+
+  .tap-btn {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #2a2510 0%, #0e0e06 60%, #050504 100%);
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 30px rgba(200,168,75,0.3), inset 0 0 30px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.08s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .tap-btn:active {
+    transform: scale(0.93);
+    box-shadow: 0 0 50px rgba(200,168,75,0.6), inset 0 0 20px rgba(200,168,75,0.1);
+  }
+
+  .tap-city-emoji { font-size: 60px; filter: drop-shadow(0 0 10px rgba(200,168,75,0.4)); }
+  .tap-label {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+
+  .tap-info {
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .tap-power {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .tap-power span { color: var(--accent2); }
+
+  .tap-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+  /* FLOAT NUMBERS */
+  .float-num {
+    position: fixed;
+    font-family: 'Russo One', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(200,168,75,0.8);
+    pointer-events: none;
+    z-index: 500;
+    animation: floatUp 1s ease-out forwards;
+    font-weight: bold;
+  }
+
+  @keyframes floatUp {
+    0% { opacity:1; transform: translateY(0) scale(1); }
+    100% { opacity:0; transform: translateY(-80px) scale(1.3); }
+  }
+
+  /* PROGRESS BAR */
+  .level-bar-wrap {
+    margin: 14px 0 6px;
+    width: 100%;
+  }
+
+  .level-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+  }
+
+  .level-bar {
+    height: 8px;
+    background: #1a1a0e;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .level-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 8px rgba(200,168,75,0.5);
+  }
+
+  /* BUILDINGS */
+  .section-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  .buildings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .building-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .building-card.affordable { border-color: rgba(200,168,75,0.4); }
+  .building-card.affordable::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background: linear-gradient(90deg, rgba(200,168,75,0.04), transparent);
+  }
+
+  .building-card.maxed { opacity: 0.5; }
+
+  .b-icon {
+    font-size: 36px;
+    width: 50px;
+    text-align: center;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(200,168,75,0.3));
+  }
+
+  .b-info { flex: 1; min-width: 0; }
+
+  .b-name {
+    font-family: 'Russo One', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .b-desc { font-size: 10px; color: var(--muted); margin-bottom: 6px; }
+
+  .b-stats {
+    display: flex;
+    gap: 10px;
+    font-size: 10px;
+  }
+
+  .b-owned { color: var(--accent); }
+  .b-rate { color: var(--accent3); }
+
+  .b-buy {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #1e1a0a, #2a2410);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 8px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    min-width: 70px;
+  }
+
+  .b-buy:active { background: rgba(200,168,75,0.15); transform: scale(0.96); }
+  .b-buy.disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--muted); color: var(--muted); }
+
+  .b-cost { font-size: 11px; display: block; }
+
+  /* CITY VISUAL */
+  .city-view {
+    background: linear-gradient(180deg, #0d1a12 0%, #081008 100%);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 14px;
+    text-align: center;
+    min-height: 120px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .city-skyline {
+    font-size: 28px;
+    letter-spacing: 4px;
+    line-height: 1.2;
+    filter: drop-shadow(0 0 8px rgba(75,186,122,0.4));
+  }
+
+  .city-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--accent3);
+    margin-top: 6px;
+  }
+
+  .city-pop {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* UPGRADES */
+  .upgrades-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .upgrade-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .upg-icon { font-size: 24px; flex-shrink: 0; }
+
+  .upg-info { flex: 1; }
+  .upg-name { font-size: 12px; color: var(--text); margin-bottom: 2px; font-family: 'Russo One', sans-serif; }
+  .upg-desc { font-size: 10px; color: var(--muted); }
+
+  .upg-btn {
+    background: linear-gradient(135deg, #1a0d0d, #2a1010);
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 7px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    min-width: 65px;
+    text-align: center;
+    transition: all 0.15s;
+  }
+
+  .upg-btn:active { background: rgba(224,95,42,0.15); transform: scale(0.96); }
+  .upg-btn.disabled { opacity: 0.3; cursor: not-allowed; }
+  .upg-btn.bought { border-color: var(--accent3); color: var(--accent3); opacity: 0.6; cursor: default; }
+
+  /* LEADERBOARD */
+  .lb-entry {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .lb-entry.mine { border-color: var(--accent); background: rgba(200,168,75,0.06); }
+
+  .lb-rank {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 20px;
+    color: var(--muted);
+    width: 28px;
+    text-align: center;
+  }
+
+  .lb-rank.top { color: var(--accent); text-shadow: 0 0 10px rgba(200,168,75,0.5); }
+
+  .lb-name { flex: 1; font-size: 12px; color: var(--text); }
+  .lb-score { font-family: 'Russo One', sans-serif; font-size: 13px; color: var(--accent3); }
+
+  /* STARS SHOP */
+  .stars-banner {
+    background: linear-gradient(135deg, #1a1005 0%, #0d0a02 100%);
+    border: 2px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stars-banner::before {
+    content: '✦ ✦ ✦';
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--accent);
+    opacity: 0.4;
+    letter-spacing: 8px;
+  }
+
+  .stars-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-top: 10px;
+  }
+
+  .stars-sub { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
+
+  .shop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .shop-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shop-item:active { transform: scale(0.96); border-color: var(--accent); }
+
+  .shop-item-icon { font-size: 32px; display: block; margin-bottom: 6px; }
+  .shop-item-name { font-size: 11px; color: var(--text); margin-bottom: 4px; font-family: 'Russo One', sans-serif; }
+  .shop-item-desc { font-size: 9px; color: var(--muted); margin-bottom: 8px; }
+  .shop-item-price {
+    background: rgba(200,168,75,0.15);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    padding: 4px 8px;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    display: inline-block;
+  }
+
+  .badge-hot {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--accent2);
+    color: white;
+    font-size: 8px;
+    padding: 2px 5px;
+    border-radius: 2px;
+    font-family: 'Bebas Neue', cursive;
+    letter-spacing: 1px;
+  }
+
+  /* NOTIFICATION */
+  .notif {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--card);
+    border: 1px solid var(--accent3);
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--accent3);
+    z-index: 999;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .notif.show { transform: translateX(-50%) translateY(0); }
+
+  /* PULSE ANIMATION */
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity:0.5; }
+  }
+
+  .pulse { animation: pulse 2s infinite; }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* CITY STAGES */
+  .city-stage-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="game-title">☢ WASTELAND EMPIRE</div>
+    <div class="day-badge" id="dayBadge">ДЕНЬ 1</div>
+  </div>
+  <div class="resources">
+    <div class="res">
+      <span class="res-icon">🧱</span>
+      <span class="res-val" id="res-scraps">0</span>
+      <span class="res-name">ЛОМ</span>
+      <span class="res-rate" id="rate-scraps">+0/с</span>
+    </div>
+    <div class="res">
+      <span class="res-icon">💧</span>
+      <span class="res-val" id="res-water">0</span>
+      <span class="res-name">ВОДА</span>
+      <span class="res-rate" id="rate-water">+0/с</span>
+    </div>
+    <div class="res">
+      <span class="res-icon">⚡</span>
+      <span class="res-val" id="res-energy">0</span>
+      <span class="res-name">ЭНЕРГИЯ</span>
+      <span class="res-rate" id="rate-energy">+0/с</span>
+    </div>
+    <div class="res">
+      <span class="res-icon">👥</span>
+      <span class="res-val" id="res-pop">0</span>
+      <span class="res-name">НАРОД</span>
+      <span class="res-rate" id="rate-pop">+0/с</span>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('tap')">
+    <span class="tab-icon">👊</span>ТАПАТЬ
+  </div>
+  <div class="tab" onclick="switchTab('build')">
+    <span class="tab-icon">🏗️</span>СТРОИТЬ
+  </div>
+  <div class="tab" onclick="switchTab('upgrade')">
+    <span class="tab-icon">⚗️</span>УЛУЧШИТЬ
+  </div>
+  <div class="tab" onclick="switchTab('world')">
+    <span class="tab-icon">🌍</span>МИР
+  </div>
+  <div class="tab" onclick="switchTab('shop')">
+    <span class="tab-icon">⭐</span>STARS
+  </div>
+</div>
+
+<!-- TAP SCREEN -->
+<div class="screen active" id="screen-tap">
+  <div class="city-view">
+    <div class="city-stage-label" id="cityStageLabel">РУИНЫ</div>
+    <div class="city-skyline" id="citySkyline">🪨💀🪨</div>
+    <div class="city-name" id="cityName">БЕЗЫМЯННАЯ ПУСТОШЬ</div>
+    <div class="city-pop" id="cityPop">Выживших: 0</div>
+  </div>
+
+  <div class="tap-zone">
+    <button class="tap-btn" id="tapBtn" ontouchstart="doTap(event)" onclick="doTap(event)">
+      <span class="tap-city-emoji" id="tapEmoji">☢️</span>
+      <span class="tap-label">ТАПНУТЬ</span>
+    </button>
+    <div class="tap-info">
+      <div class="tap-power">+<span id="tapPower">1</span> 🧱</div>
+      <div class="tap-sub">ЗА НАЖАТИЕ</div>
+    </div>
+    <div class="level-bar-wrap">
+      <div class="level-label">
+        <span id="levelLabel">УРОВЕНЬ 1 — ВЫЖИВШИЙ</span>
+        <span id="levelPct">0%</span>
+      </div>
+      <div class="level-bar"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BUILD SCREEN -->
+<div class="screen" id="screen-build">
+  <div class="section-title">⚙ СТРОИТЕЛЬСТВО</div>
+  <div class="buildings-grid" id="buildingsGrid"></div>
+</div>
+
+<!-- UPGRADE SCREEN -->
+<div class="screen" id="screen-upgrade">
+  <div class="section-title">🔬 ТЕХНОЛОГИИ</div>
+  <div class="upgrades-grid" id="upgradesGrid"></div>
+</div>
+
+<!-- WORLD SCREEN -->
+<div class="screen" id="screen-world">
+  <div class="section-title">🏆 РЕЙТИНГ ВЫЖИВШИХ</div>
+  <div id="leaderboard"></div>
+</div>
+
+<!-- SHOP SCREEN -->
+<div class="screen" id="screen-shop">
+  <div class="stars-banner">
+    <div class="stars-title">⭐ МАГАЗИН ЗВЁЗД</div>
+    <div class="stars-sub">УСКОРЬ ВОССТАНОВЛЕНИЕ ЦИВИЛИЗАЦИИ</div>
+  </div>
+  <div class="shop-grid" id="shopGrid"></div>
+  <div style="font-size:9px;color:var(--muted);text-align:center;letter-spacing:1px;margin-top:8px;">
+    ПОКУПКИ ЧЕРЕЗ TELEGRAM STARS · БЕЗОПАСНО
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ===== GAME STATE =====
+const G = {
+  scraps: 0, water: 0, energy: 0, pop: 0,
+  totalScraps: 0,
+  tapPower: 1,
+  tapCount: 0,
+  day: 1,
+  level: 1,
+  xp: 0,
+  xpNext: 100,
+  lastTick: Date.now(),
+};
+
+// ===== BUILDINGS =====
+const BUILDINGS = [
+  {
+    id: 'tent', icon: '⛺', name: 'Лагерь выживших', desc: 'Базовое убежище. Привлекает выживших.',
+    baseCost: { scraps: 15 }, owned: 0, maxOwned: 20,
+    production: { pop: 0.05, scraps: 0.2 },
+    unlockLevel: 1,
+  },
+  {
+    id: 'well', icon: '🪣', name: 'Колодец', desc: 'Добывает чистую воду из-под земли.',
+    baseCost: { scraps: 40 }, owned: 0, maxOwned: 15,
+    production: { water: 0.5 },
+    unlockLevel: 1,
+  },
+  {
+    id: 'scrapyard', icon: '🔩', name: 'Свалка металлолома', desc: 'Автоматически собирает лом.',
+    baseCost: { scraps: 80, water: 10 }, owned: 0, maxOwned: 20,
+    production: { scraps: 1.5 },
+    unlockLevel: 2,
+  },
+  {
+    id: 'generator', icon: '🔋', name: 'Генератор', desc: 'Даёт электричество посёлку.',
+    baseCost: { scraps: 150, water: 20 }, owned: 0, maxOwned: 10,
+    production: { energy: 1.0 },
+    unlockLevel: 2,
+  },
+  {
+    id: 'farm', icon: '🌾', name: 'Токсичная ферма', desc: 'Адаптированные к радиации культуры.',
+    baseCost: { scraps: 300, water: 50, energy: 5 }, owned: 0, maxOwned: 15,
+    production: { pop: 0.3, water: -0.2, scraps: 0.5 },
+    unlockLevel: 3,
+  },
+  {
+    id: 'workshop', icon: '🔧', name: 'Мастерская', desc: 'Производит продвинутые компоненты.',
+    baseCost: { scraps: 500, energy: 15 }, owned: 0, maxOwned: 10,
+    production: { scraps: 4.0, energy: -0.5 },
+    unlockLevel: 3,
+  },
+  {
+    id: 'barracks', icon: '🪖', name: 'Казармы', desc: 'Обучает защитников пустоши.',
+    baseCost: { scraps: 800, water: 100, energy: 20 }, owned: 0, maxOwned: 8,
+    production: { pop: 0.5, scraps: -0.3 },
+    unlockLevel: 4,
+  },
+  {
+    id: 'reactor', icon: '☢️', name: 'Мини-реактор', desc: 'Термоядерный источник энергии.',
+    baseCost: { scraps: 2000, water: 200, energy: 30 }, owned: 0, maxOwned: 5,
+    production: { energy: 10, scraps: -1 },
+    unlockLevel: 5,
+  },
+];
+
+// ===== UPGRADES =====
+const UPGRADES = [
+  { id: 'u1', icon: '🦺', name: 'Защитные перчатки', desc: 'Тап дает +2 лома', cost: { scraps: 100 }, bought: false, effect: () => { G.tapPower += 2; }, unlockLevel: 1 },
+  { id: 'u2', icon: '🔨', name: 'Кувалда', desc: 'Тап дает x2 лома', cost: { scraps: 300 }, bought: false, effect: () => { G.tapPower *= 2; }, unlockLevel: 2 },
+  { id: 'u3', icon: '💧', name: 'Фильтр воды', desc: 'Колодцы дают x2 воды', cost: { scraps: 200, water: 50 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='well').production.water *= 2; }, unlockLevel: 2 },
+  { id: 'u4', icon: '⚡', name: 'Сверхпроводник', desc: 'Генераторы дают x2 энергии', cost: { scraps: 500, energy: 20 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='generator').production.energy *= 2; }, unlockLevel: 3 },
+  { id: 'u5', icon: '🧲', name: 'Магнитный захват', desc: 'Свалки дают x2 лома', cost: { scraps: 800 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='scrapyard').production.scraps *= 2; }, unlockLevel: 3 },
+  { id: 'u6', icon: '💊', name: 'Антирад', desc: 'Фермы не потребляют воду', cost: { scraps: 1200, water: 200 }, bought: false, effect: () => { const f = BUILDINGS.find(b=>b.id==='farm'); if(f.production.water < 0) f.production.water = 0; }, unlockLevel: 4 },
+  { id: 'u7', icon: '🤖', name: 'Автоматика', desc: 'Тап дает x5 лома', cost: { scraps: 3000, energy: 50 }, bought: false, effect: () => { G.tapPower *= 5; }, unlockLevel: 5 },
+  { id: 'u8', icon: '🧬', name: 'Мутация', desc: 'Все производство x1.5', cost: { scraps: 5000, water: 500, energy: 100 }, bought: false, effect: () => { BUILDINGS.forEach(b => { Object.keys(b.production).forEach(k => { if(b.production[k] > 0) b.production[k] *= 1.5; }); }); }, unlockLevel: 6 },
+];
+
+// ===== LEVELS =====
+const LEVELS = [
+  { level:1, name:'ВЫЖИВШИЙ', xp:0, emoji:'☢️', cityEmoji:'🪨💀🪨', stage:'РУИНЫ', cityName:'БЕЗЫМЯННАЯ ПУСТОШЬ' },
+  { level:2, name:'СОБИРАТЕЛЬ', xp:100, emoji:'🔩', cityEmoji:'⛺🪨⛺', stage:'ЛАГЕРЬ', cityName:'ЛАГЕРЬ НАДЕЖДЫ' },
+  { level:3, name:'СТРОИТЕЛЬ', xp:300, emoji:'🏚️', cityEmoji:'🏚️⛺🏚️', stage:'ПОСЁЛОК', cityName:'ПОСЁЛОК ФЕНИКС' },
+  { level:4, name:'ВОЖДЬ', xp:700, emoji:'🪖', cityEmoji:'🏠🏚️🏠', stage:'ГОРОДОК', cityName:'ФОРТ ВЫЖИВШИХ' },
+  { level:5, name:'ВЛАСТЕЛИН', xp:1500, emoji:'🏗️', cityEmoji:'🏢🏗️🏢', stage:'ГОРОД', cityName:'НОВЫЙ МИР' },
+  { level:6, name:'АРХИТЕКТОР', xp:3000, emoji:'🏙️', cityEmoji:'🏙️🏛️🏙️', stage:'МЕТРОПОЛИС', cityName:'ИМПЕРИЯ ПУСТОШИ' },
+  { level:7, name:'ИМПЕРАТОР', xp:6000, emoji:'👑', cityEmoji:'🏙️🏰🏙️', stage:'СТОЛИЦА', cityName:'☢ ВЕЧНЫЙ ГОРОД ☢' },
+];
+
+// ===== SHOP =====
+const SHOP_ITEMS = [
+  { icon:'⚡', name:'УСКОРИТЕЛЬ', desc:'x2 к производству на 1 час', price:'50 ⭐', hot:true },
+  { icon:'💣', name:'БОМБА ЛОМА', desc:'+5000 лома сразу', price:'30 ⭐', hot:false },
+  { icon:'🔓', name:'РАЗБЛОКИРОВАТЬ', desc:'Открыть все здания сразу', price:'100 ⭐', hot:false },
+  { icon:'🤖', name:'АВТОТАП', desc:'Автоматический тап 24ч', price:'75 ⭐', hot:true },
+  { icon:'🛡️', name:'ЗАЩИТА', desc:'Защита от рейдов на 7 дней', price:'40 ⭐', hot:false },
+  { icon:'👑', name:'VIP СТАТУС', desc:'x2 ко всему навсегда', price:'500 ⭐', hot:false },
+];
+
+// ===== LEADERBOARD (mock) =====
+const LB_DATA = [
+  { name:'💀 xDeathWalker', score:'48,320', rank:1 },
+  { name:'☢ RadKing99', score:'41,100', rank:2 },
+  { name:'🔩 Scrapmaster', score:'38,450', rank:3 },
+  { name:'⚡ PowerUser', score:'29,800', rank:4 },
+  { name:'🌑 DarkHorizon', score:'21,550', rank:5 },
+  { name:'🪖 Warlord88', score:'17,300', rank:6 },
+  { name:'💧 Aquaman777', score:'12,100', rank:7 },
+  { name:'🦺 Survivor_X', score:'8,900', rank:8 },
+  { name:'🔥 AshRunner', score:'6,200', rank:9 },
+  { name:'👤 ТЫ (Игрок)', score: '–', rank:10, mine:true },
+];
+
+// ===== HELPERS =====
+function fmt(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return Math.floor(n).toString();
+}
+
+function canAfford(cost) {
+  return Object.entries(cost).every(([r,v]) => G[r] >= v);
+}
+
+function spend(cost) {
+  Object.entries(cost).forEach(([r,v]) => G[r] -= v);
+}
+
+function getBuildingCost(b) {
+  const mult = Math.pow(1.18, b.owned);
+  const result = {};
+  Object.entries(b.baseCost).forEach(([r,v]) => result[r] = Math.floor(v * mult));
+  return result;
+}
+
+// ===== TAP =====
+function doTap(e) {
+  e.preventDefault();
+  G.scraps += G.tapPower;
+  G.totalScraps += G.tapPower;
+  G.tapCount++;
+  G.xp += 1;
+  checkLevel();
+
+  // Float number
+  const touches = e.touches;
+  let x, y;
+  if (touches && touches.length > 0) {
+    x = touches[0].clientX; y = touches[0].clientY;
+  } else {
+    x = e.clientX; y = e.clientY;
+  }
+  spawnFloat(x, y, `+${G.tapPower}`);
+  updateUI();
+}
+
+function spawnFloat(x, y, text) {
+  const el = document.createElement('div');
+  el.className = 'float-num';
+  el.textContent = text;
+  el.style.left = (x - 20) + 'px';
+  el.style.top = (y - 30) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// ===== LEVEL =====
+function checkLevel() {
+  const next = LEVELS.find(l => l.level === G.level + 1);
+  if (!next) return;
+  if (G.xp >= next.xp) {
+    G.level++;
+    G.xp = 0;
+    G.xpNext = (LEVELS.find(l => l.level === G.level + 1) || { xp: 99999 }).xp - LEVELS.find(l => l.level === G.level).xp;
+    showNotif(`🎉 УРОВЕНЬ ${G.level}! ${LEVELS.find(l=>l.level===G.level).name}`);
+    renderBuildings();
+    renderUpgrades();
+  }
+}
+
+// ===== TICK =====
+setInterval(() => {
+  const now = Date.now();
+  const dt = (now - G.lastTick) / 1000;
+  G.lastTick = now;
+
+  // Production from buildings
+  BUILDINGS.forEach(b => {
+    if (b.owned <= 0) return;
+    Object.entries(b.production).forEach(([r, rate]) => {
+      G[r] = Math.max(0, G[r] + rate * b.owned * dt);
+    });
+  });
+
+  // Cap resources
+  G.scraps = Math.min(G.scraps, 9999999);
+  G.water = Math.min(G.water, 9999999);
+  G.energy = Math.min(G.energy, 9999999);
+  G.pop = Math.min(G.pop, 99999);
+
+  // Day counter
+  G.day = Math.floor(G.tapCount / 50) + 1;
+
+  updateUI();
+}, 200);
+
+// ===== UI UPDATE =====
+function updateUI() {
+  document.getElementById('res-scraps').textContent = fmt(G.scraps);
+  document.getElementById('res-water').textContent = fmt(G.water);
+  document.getElementById('res-energy').textContent = fmt(G.energy);
+  document.getElementById('res-pop').textContent = fmt(G.pop);
+
+  // Rates
+  let rates = { scraps:0, water:0, energy:0, pop:0 };
+  BUILDINGS.forEach(b => {
+    if(b.owned <= 0) return;
+    Object.entries(b.production).forEach(([r,v]) => { if(rates[r]!==undefined) rates[r] += v * b.owned; });
+  });
+  document.getElementById('rate-scraps').textContent = (rates.scraps >= 0 ? '+' : '') + rates.scraps.toFixed(1) + '/с';
+  document.getElementById('rate-water').textContent = (rates.water >= 0 ? '+' : '') + rates.water.toFixed(1) + '/с';
+  document.getElementById('rate-energy').textContent = (rates.energy >= 0 ? '+' : '') + rates.energy.toFixed(1) + '/с';
+  document.getElementById('rate-pop').textContent = (rates.pop >= 0 ? '+' : '') + rates.pop.toFixed(1) + '/с';
+
+  document.getElementById('tapPower').textContent = G.tapPower;
+  document.getElementById('dayBadge').textContent = 'ДЕНЬ ' + G.day;
+
+  // Level
+  const curLvl = LEVELS.find(l => l.level === G.level) || LEVELS[0];
+  const nextLvl = LEVELS.find(l => l.level === G.level + 1);
+  const xpStart = curLvl.xp;
+  const xpEnd = nextLvl ? nextLvl.xp : xpStart + 9999;
+  const pct = Math.min(100, Math.floor((G.xp / (xpEnd - xpStart)) * 100));
+  document.getElementById('levelLabel').textContent = `УР.${G.level} — ${curLvl.name}`;
+  document.getElementById('levelPct').textContent = pct + '%';
+  document.getElementById('levelFill').style.width = pct + '%';
+
+  // City view
+  document.getElementById('citySkyline').textContent = curLvl.cityEmoji;
+  document.getElementById('cityName').textContent = curLvl.cityName;
+  document.getElementById('cityStageLabel').textContent = curLvl.stage;
+  document.getElementById('cityPop').textContent = 'Выживших: ' + fmt(G.pop) + (G.pop < 1 ? ' — пусто...' : '');
+  document.getElementById('tapEmoji').textContent = curLvl.emoji;
+
+  // Building afford highlights
+  document.querySelectorAll('.building-card').forEach(card => {
+    const id = card.dataset.id;
+    const b = BUILDINGS.find(x => x.id === id);
+    if (!b) return;
+    const cost = getBuildingCost(b);
+    const can = canAfford(cost) && b.owned < b.maxOwned;
+    card.classList.toggle('affordable', can);
+    const btn = card.querySelector('.b-buy');
+    btn.classList.toggle('disabled', !can);
+  });
+}
+
+// ===== RENDER BUILDINGS =====
+function renderBuildings() {
+  const grid = document.getElementById('buildingsGrid');
+  grid.innerHTML = '';
+  BUILDINGS.forEach(b => {
+    if (b.unlockLevel > G.level) return;
+    const cost = getBuildingCost(b);
+    const costStr = Object.entries(cost).map(([r,v]) => fmt(v) + ' ' + ({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)).join(' + ');
+    const prodStr = Object.entries(b.production).map(([r,v]) => (v>0?'+':'')+v.toFixed(1)+({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)+'/с').join(' ');
+    const can = canAfford(cost) && b.owned < b.maxOwned;
+    const maxed = b.owned >= b.maxOwned;
+
+    const card = document.createElement('div');
+    card.className = 'building-card' + (can ? ' affordable' : '') + (maxed ? ' maxed' : '');
+    card.dataset.id = b.id;
+    card.innerHTML = `
+      <div class="b-icon">${b.icon}</div>
+      <div class="b-info">
+        <div class="b-name">${b.name}</div>
+        <div class="b-desc">${b.desc}</div>
+        <div class="b-stats">
+          <span class="b-owned">📦 ${b.owned}/${b.maxOwned}</span>
+          <span class="b-rate">${prodStr}</span>
+        </div>
+      </div>
+      <button class="b-buy ${!can ? 'disabled' : ''}" onclick="buyBuilding('${b.id}')">
+        КУПИТЬ<span class="b-cost">${maxed ? 'МАКС' : costStr}</span>
+      </button>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function buyBuilding(id) {
+  const b = BUILDINGS.find(x => x.id === id);
+  if (!b || b.owned >= b.maxOwned) return;
+  const cost = getBuildingCost(b);
+  if (!canAfford(cost)) return;
+  spend(cost);
+  b.owned++;
+  G.xp += 10;
+  checkLevel();
+  showNotif(`✅ ${b.name} построено! (${b.owned}/${b.maxOwned})`);
+  renderBuildings();
+  updateUI();
+}
+
+// ===== RENDER UPGRADES =====
+function renderUpgrades() {
+  const grid = document.getElementById('upgradesGrid');
+  grid.innerHTML = '';
+  UPGRADES.forEach(u => {
+    if (u.unlockLevel > G.level) return;
+    const can = canAfford(u.cost) && !u.bought;
+    const costStr = Object.entries(u.cost).map(([r,v]) => fmt(v) + ({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)).join(' + ');
+
+    const card = document.createElement('div');
+    card.className = 'upgrade-card';
+    card.innerHTML = `
+      <div class="upg-icon">${u.icon}</div>
+      <div class="upg-info">
+        <div class="upg-name">${u.name}</div>
+        <div class="upg-desc">${u.desc}</div>
+      </div>
+      <button class="upg-btn ${u.bought ? 'bought' : (!can ? 'disabled' : '')}" onclick="buyUpgrade('${u.id}')">
+        ${u.bought ? '✅ КУПЛЕНО' : costStr}
+      </button>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function buyUpgrade(id) {
+  const u = UPGRADES.find(x => x.id === id);
+  if (!u || u.bought || !canAfford(u.cost)) return;
+  spend(u.cost);
+  u.bought = true;
+  u.effect();
+  showNotif(`🔬 Улучшение "${u.name}" активировано!`);
+  renderUpgrades();
+  updateUI();
+}
+
+// ===== RENDER LEADERBOARD =====
+function renderLeaderboard() {
+  const lb = document.getElementById('leaderboard');
+  lb.innerHTML = LB_DATA.map(e => `
+    <div class="lb-entry ${e.mine ? 'mine' : ''}">
+      <div class="lb-rank ${e.rank<=3?'top':''}">${e.rank <= 3 ? ['🥇','🥈','🥉'][e.rank-1] : e.rank}</div>
+      <div class="lb-name">${e.name}</div>
+      <div class="lb-score">${e.mine ? fmt(G.totalScraps) : e.score}</div>
+    </div>
+  `).join('');
+}
+
+// ===== RENDER SHOP =====
+function renderShop() {
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = SHOP_ITEMS.map(item => `
+    <div class="shop-item" onclick="buyStars('${item.name}', '${item.price}')">
+      ${item.hot ? '<div class="badge-hot">HOT</div>' : ''}
+      <span class="shop-item-icon">${item.icon}</span>
+      <div class="shop-item-name">${item.name}</div>
+      <div class="shop-item-desc">${item.desc}</div>
+      <div class="shop-item-price">${item.price}</div>
+    </div>
+  `).join('');
+}
+
+function buyStars(name, price) {
+  showNotif(`⭐ Покупка "${name}" (${price}) — Telegram Stars`);
+}
+
+// ===== NOTIFICATION =====
+function showNotif(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ===== TAB SWITCHING =====
+function switchTab(tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (tab === 'build') renderBuildings();
+  if (tab === 'upgrade') renderUpgrades();
+  if (tab === 'world') renderLeaderboard();
+  if (tab === 'shop') renderShop();
+}
+
+// ===== INIT =====
+renderBuildings();
+renderUpgrades();
+updateUI();
+</script>
+</body>
+</html>
