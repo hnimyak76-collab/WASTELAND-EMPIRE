@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WASTELAND EMPIRE</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Russo+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Exo+2:wght@400;600;700&family=Russo+One&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
@@ -26,7 +26,8 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
     min-height: 100vh;
     overflow-x: hidden;
     user-select: none;
@@ -361,17 +362,17 @@
 
   .b-name {
     font-family: 'Russo One', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text);
-    margin-bottom: 2px;
+    margin-bottom: 3px;
   }
 
-  .b-desc { font-size: 10px; color: var(--muted); margin-bottom: 6px; }
+  .b-desc { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 
   .b-stats {
     display: flex;
     gap: 10px;
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .b-owned { color: var(--accent); }
@@ -449,11 +450,11 @@
     gap: 10px;
   }
 
-  .upg-icon { font-size: 24px; flex-shrink: 0; }
+  .upg-icon { font-size: 28px; flex-shrink: 0; }
 
   .upg-info { flex: 1; }
-  .upg-name { font-size: 12px; color: var(--text); margin-bottom: 2px; font-family: 'Russo One', sans-serif; }
-  .upg-desc { font-size: 10px; color: var(--muted); }
+  .upg-name { font-size: 14px; color: var(--text); margin-bottom: 3px; font-family: 'Russo One', sans-serif; }
+  .upg-desc { font-size: 12px; color: var(--muted); }
 
   .upg-btn {
     background: linear-gradient(135deg, #1a0d0d, #2a1010);
@@ -718,7 +719,7 @@
       </div>
       <div class="level-bar"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
     </div>
-    <button onclick="saveProgress()" style="margin-top:10px;width:100%;background:linear-gradient(135deg,#1a1a0e,#2a2410);border:1px solid var(--accent);color:var(--accent);font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:2px;padding:10px;border-radius:3px;cursor:pointer;">
+    <button onclick="saveProgressManual()" style="margin-top:10px;width:100%;background:linear-gradient(135deg,#1a1a0e,#2a2410);border:1px solid var(--accent);color:var(--accent);font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:2px;padding:10px;border-radius:3px;cursor:pointer;">
       💾 СОХРАНИТЬ ПРОГРЕСС
     </button>
   </div>
@@ -825,14 +826,23 @@ const BUILDINGS = [
 
 // ===== UPGRADES =====
 const UPGRADES = [
-  { id: 'u1', icon: '🦺', name: 'Защитные перчатки', desc: 'Тап дает +2 лома', cost: { scraps: 100 }, bought: false, effect: () => { G.tapPower += 2; }, unlockLevel: 1 },
-  { id: 'u2', icon: '🔨', name: 'Кувалда', desc: 'Тап дает x2 лома', cost: { scraps: 300 }, bought: false, effect: () => { G.tapPower *= 2; }, unlockLevel: 2 },
+  { id: 'u1', icon: '🦺', name: 'Защитные перчатки', desc: 'Тап даёт +2 лома', cost: { scraps: 100 }, bought: false, effect: () => { G.tapPower += 2; }, unlockLevel: 1 },
+  { id: 'u2', icon: '🔨', name: 'Кувалда', desc: 'Тап даёт x2 лома', cost: { scraps: 300 }, bought: false, effect: () => { G.tapPower *= 2; }, unlockLevel: 2 },
   { id: 'u3', icon: '💧', name: 'Фильтр воды', desc: 'Колодцы дают x2 воды', cost: { scraps: 200, water: 50 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='well').production.water *= 2; }, unlockLevel: 2 },
   { id: 'u4', icon: '⚡', name: 'Сверхпроводник', desc: 'Генераторы дают x2 энергии', cost: { scraps: 500, energy: 20 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='generator').production.energy *= 2; }, unlockLevel: 3 },
   { id: 'u5', icon: '🧲', name: 'Магнитный захват', desc: 'Свалки дают x2 лома', cost: { scraps: 800 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='scrapyard').production.scraps *= 2; }, unlockLevel: 3 },
   { id: 'u6', icon: '💊', name: 'Антирад', desc: 'Фермы не потребляют воду', cost: { scraps: 1200, water: 200 }, bought: false, effect: () => { const f = BUILDINGS.find(b=>b.id==='farm'); if(f.production.water < 0) f.production.water = 0; }, unlockLevel: 4 },
-  { id: 'u7', icon: '🤖', name: 'Автоматика', desc: 'Тап дает x5 лома', cost: { scraps: 3000, energy: 50 }, bought: false, effect: () => { G.tapPower *= 5; }, unlockLevel: 5 },
-  { id: 'u8', icon: '🧬', name: 'Мутация', desc: 'Все производство x1.5', cost: { scraps: 5000, water: 500, energy: 100 }, bought: false, effect: () => { BUILDINGS.forEach(b => { Object.keys(b.production).forEach(k => { if(b.production[k] > 0) b.production[k] *= 1.5; }); }); }, unlockLevel: 6 },
+  { id: 'u7', icon: '🤖', name: 'Автоматика', desc: 'Тап даёт x5 лома', cost: { scraps: 3000, energy: 50 }, bought: false, effect: () => { G.tapPower *= 5; }, unlockLevel: 5 },
+  { id: 'u8', icon: '🧬', name: 'Мутация', desc: 'Всё производство x1.5', cost: { scraps: 5000, water: 500, energy: 100 }, bought: false, effect: () => { BUILDINGS.forEach(b => { Object.keys(b.production).forEach(k => { if(b.production[k] > 0) b.production[k] *= 1.5; }); }); }, unlockLevel: 6 },
+  // Новые улучшения
+  { id: 'u9', icon: '🪓', name: 'Топор мародёра', desc: 'Тап даёт +10 лома', cost: { scraps: 500 }, bought: false, effect: () => { G.tapPower += 10; }, unlockLevel: 2 },
+  { id: 'u10', icon: '🌧️', name: 'Сборщик дождя', desc: 'Колодцы дают +1 воды/с каждый', cost: { scraps: 600, water: 100 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='well').production.water += 1; }, unlockLevel: 3 },
+  { id: 'u11', icon: '🔥', name: 'Плазменная горелка', desc: 'Мастерские дают x3 лома', cost: { scraps: 2000, energy: 40 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='workshop').production.scraps *= 3; }, unlockLevel: 4 },
+  { id: 'u12', icon: '🪖', name: 'Воинский дух', desc: 'Казармы дают +1 народа/с', cost: { scraps: 2500, water: 200 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='barracks').production.pop += 1; }, unlockLevel: 4 },
+  { id: 'u13', icon: '☢️', name: 'Ядерное топливо', desc: 'Реакторы дают x2 энергии', cost: { scraps: 4000, energy: 80 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='reactor').production.energy *= 2; }, unlockLevel: 5 },
+  { id: 'u14', icon: '🦾', name: 'Экзоскелет', desc: 'Тап даёт x10 лома', cost: { scraps: 8000, energy: 100 }, bought: false, effect: () => { G.tapPower *= 10; }, unlockLevel: 6 },
+  { id: 'u15', icon: '🌿', name: 'Гидропоника', desc: 'Фермы дают x3 населения', cost: { scraps: 3000, water: 400 }, bought: false, effect: () => { BUILDINGS.find(b=>b.id==='farm').production.pop *= 3; }, unlockLevel: 5 },
+  { id: 'u16', icon: '👑', name: 'Имперский указ', desc: 'Весь тап x20 — финальное улучшение', cost: { scraps: 20000, water: 2000, energy: 500 }, bought: false, effect: () => { G.tapPower *= 20; }, unlockLevel: 7 },
 ];
 
 // ===== LEVELS =====
@@ -898,7 +908,7 @@ function doTap(e) {
   G.scraps += G.tapPower;
   G.totalScraps += G.tapPower;
   G.tapCount++;
-  G.xp += 1;
+  G.xp += 5; // накапливаем XP без сброса
   checkLevel();
 
   // Float number
@@ -928,10 +938,8 @@ function checkLevel() {
   const next = LEVELS.find(l => l.level === G.level + 1);
   if (!next) return;
   if (G.xp >= next.xp) {
-    G.level++;
-    G.xp = 0;
-    G.xpNext = (LEVELS.find(l => l.level === G.level + 1) || { xp: 99999 }).xp - LEVELS.find(l => l.level === G.level).xp;
-    showNotif(`🎉 УРОВЕНЬ ${G.level}! ${LEVELS.find(l=>l.level===G.level).name}`);
+    G.level = next.level;
+    showNotif(`🎉 УРОВЕНЬ ${G.level}! ${next.name}`);
     renderBuildings();
     renderUpgrades();
   }
@@ -984,12 +992,12 @@ function updateUI() {
   document.getElementById('tapPower').textContent = G.tapPower;
   document.getElementById('dayBadge').textContent = 'ДЕНЬ ' + G.day;
 
-  // Level
+  // Level - cumulative XP system
   const curLvl = LEVELS.find(l => l.level === G.level) || LEVELS[0];
   const nextLvl = LEVELS.find(l => l.level === G.level + 1);
   const xpStart = curLvl.xp;
   const xpEnd = nextLvl ? nextLvl.xp : xpStart + 9999;
-  const pct = Math.min(100, Math.floor((G.xp / (xpEnd - xpStart)) * 100));
+  const pct = Math.min(100, Math.floor(((G.xp - xpStart) / (xpEnd - xpStart)) * 100));
   document.getElementById('levelLabel').textContent = `УР.${G.level} — ${curLvl.name}`;
   document.getElementById('levelPct').textContent = pct + '%';
   document.getElementById('levelFill').style.width = pct + '%';
@@ -1199,10 +1207,13 @@ async function saveProgress() {
       savedAt: Date.now()
     };
     await window.db.collection('players').doc(String(saveUserId)).set(saveData);
-    showNotif('💾 Прогресс сохранён');
   } catch(e) {
     console.error('Save error:', e);
   }
+}
+
+function saveProgressManual() {
+  saveProgress().then(() => showNotif('💾 Прогресс сохранён'));
 }
 
 async function loadProgress(userId) {
