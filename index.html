@@ -395,7 +395,7 @@
   }
 
   .b-buy:active { background: rgba(200,168,75,0.15); transform: scale(0.96); }
-  .b-buy.disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--muted); color: var(--muted); }
+  .b-buy.disabled { opacity: 0.4; border-color: var(--muted); color: var(--muted); }
 
   .b-cost { font-size: 11px; display: block; }
 
@@ -888,11 +888,11 @@ function fmt(n) {
 }
 
 function canAfford(cost) {
-  return Object.entries(cost).every(([r,v]) => G[r] >= v);
+  return Object.entries(cost).every(([r,v]) => Math.floor(G[r]) >= Math.floor(v));
 }
 
 function spend(cost) {
-  Object.entries(cost).forEach(([r,v]) => G[r] -= v);
+  Object.entries(cost).forEach(([r,v]) => G[r] = Math.max(0, G[r] - v));
 }
 
 function getBuildingCost(b) {
@@ -1057,9 +1057,18 @@ function renderBuildings() {
 
 function buyBuilding(id) {
   const b = BUILDINGS.find(x => x.id === id);
-  if (!b || b.owned >= b.maxOwned) return;
+  if (!b) return;
+  if (b.owned >= b.maxOwned) { showNotif('⛔ Максимум построено!'); return; }
   const cost = getBuildingCost(b);
-  if (!canAfford(cost)) return;
+  if (!canAfford(cost)) {
+    const need = Object.entries(cost).map(([r,v]) => {
+      const diff = Math.ceil(v - G[r]);
+      if (diff <= 0) return null;
+      return `${diff} ${({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)}`;
+    }).filter(Boolean).join(', ');
+    showNotif(`❌ Не хватает: ${need}`);
+    return;
+  }
   spend(cost);
   b.owned++;
   G.xp += 10;
