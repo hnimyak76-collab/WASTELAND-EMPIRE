@@ -1045,54 +1045,102 @@ function updateUI() {
 function renderBuildings() {
   const grid = document.getElementById('buildingsGrid');
   grid.innerHTML = '';
-  BUILDINGS.forEach(b => {
-    if (b.unlockLevel > G.level) return;
+
+  const available = BUILDINGS.filter(b => b.unlockLevel <= G.level);
+
+  if (available.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:13px;">Тапай больше — откроешь здания!</div>';
+    return;
+  }
+
+  available.forEach(b => {
     const cost = getBuildingCost(b);
-    const costStr = Object.entries(cost).map(([r,v]) => fmt(v) + ' ' + ({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)).join(' + ');
-    const prodStr = Object.entries(b.production).map(([r,v]) => (v>0?'+':'')+v.toFixed(1)+({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)+'/с').join(' ');
-    const can = canAfford(cost) && b.owned < b.maxOwned;
+    const canBuy = canAfford(cost) && b.owned < b.maxOwned;
     const maxed = b.owned >= b.maxOwned;
 
+    const costParts = Object.entries(cost).map(([r,v]) => {
+      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
+      return fmt(v) + ' ' + (icons[r] || r);
+    }).join(' + ');
+
+    const prodParts = Object.entries(b.production).map(([r,v]) => {
+      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
+      return (v > 0 ? '+' : '') + v.toFixed(1) + (icons[r] || r) + '/с';
+    }).join('  ');
+
     const card = document.createElement('div');
-    card.className = 'building-card' + (can ? ' affordable' : '') + (maxed ? ' maxed' : '');
-    card.dataset.id = b.id;
-    card.innerHTML = `
-      <div class="b-icon">${b.icon}</div>
-      <div class="b-info">
-        <div class="b-name">${b.name}</div>
-        <div class="b-desc">${b.desc}</div>
-        <div class="b-stats">
-          <span class="b-owned">📦 ${b.owned}/${b.maxOwned}</span>
-          <span class="b-rate">${prodStr}</span>
-        </div>
+    card.className = 'building-card' + (canBuy ? ' affordable' : '') + (maxed ? ' maxed' : '');
+
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'b-icon';
+    iconDiv.textContent = b.icon;
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'b-info';
+    infoDiv.innerHTML = `
+      <div class="b-name">${b.name}</div>
+      <div class="b-desc">${b.desc}</div>
+      <div class="b-stats">
+        <span class="b-owned">📦 ${b.owned}/${b.maxOwned}</span>
+        <span class="b-rate">${prodParts}</span>
       </div>
-      <button class="b-buy ${!can ? 'disabled' : ''}" onclick="buyBuilding('${b.id}')">
-        КУПИТЬ<span class="b-cost">${maxed ? 'МАКС' : costStr}</span>
-      </button>
     `;
+
+    const btn = document.createElement('button');
+    btn.className = 'b-buy' + (maxed ? ' disabled' : '');
+    btn.innerHTML = maxed
+      ? '<span>МАКС</span>'
+      : `КУПИТЬ<span class="b-cost" style="display:block;font-size:10px;margin-top:2px;">${costParts}</span>`;
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      handleBuyBuilding(b.id);
+    });
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleBuyBuilding(b.id);
+    });
+
+    card.appendChild(iconDiv);
+    card.appendChild(infoDiv);
+    card.appendChild(btn);
     grid.appendChild(card);
   });
 }
 
-function buyBuilding(id) {
+function handleBuyBuilding(id) {
   const b = BUILDINGS.find(x => x.id === id);
-  if (!b) return;
+  if (!b) { showNotif('❌ Здание не найдено'); return; }
   if (b.owned >= b.maxOwned) { showNotif('⛔ Максимум построено!'); return; }
+
   const cost = getBuildingCost(b);
-  if (!canAfford(cost)) {
-    const need = Object.entries(cost).map(([r,v]) => {
-      const diff = Math.ceil(v - G[r]);
-      if (diff <= 0) return null;
-      return `${diff} ${({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)}`;
-    }).filter(Boolean).join(', ');
-    showNotif(`❌ Не хватает: ${need}`);
+
+  // Проверка по каждому ресурсу
+  const missing = [];
+  Object.entries(cost).forEach(([r, v]) => {
+    const have = Math.floor(G[r] || 0);
+    const need = Math.ceil(v);
+    if (have < need) {
+      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
+      missing.push(`${need - have} ${icons[r] || r}`);
+    }
+  });
+
+  if (missing.length > 0) {
+    showNotif('❌ Не хватает: ' + missing.join(', '));
     return;
   }
-  spend(cost);
+
+  // Списываем ресурсы
+  Object.entries(cost).forEach(([r, v]) => {
+    G[r] = Math.max(0, (G[r] || 0) - v);
+  });
+
   b.owned++;
   G.xp += 10;
   checkLevel();
-  showNotif(`✅ ${b.name} построено! (${b.owned}/${b.maxOwned})`);
+  showNotif(`✅ ${b.name} (${b.owned}/${b.maxOwned})`);
   renderBuildings();
   updateUI();
 }
@@ -1101,34 +1149,88 @@ function buyBuilding(id) {
 function renderUpgrades() {
   const grid = document.getElementById('upgradesGrid');
   grid.innerHTML = '';
-  UPGRADES.forEach(u => {
-    if (u.unlockLevel > G.level) return;
-    const can = canAfford(u.cost) && !u.bought;
-    const costStr = Object.entries(u.cost).map(([r,v]) => fmt(v) + ({scraps:'🧱',water:'💧',energy:'⚡',pop:'👥'}[r]||r)).join(' + ');
+
+  const available = UPGRADES.filter(u => u.unlockLevel <= G.level);
+
+  if (available.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:13px;">Тапай больше — откроешь улучшения!</div>';
+    return;
+  }
+
+  available.forEach(u => {
+    const canBuy = canAfford(u.cost) && !u.bought;
+    const costParts = Object.entries(u.cost).map(([r,v]) => {
+      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
+      return fmt(v) + (icons[r] || r);
+    }).join(' + ');
 
     const card = document.createElement('div');
     card.className = 'upgrade-card';
-    card.innerHTML = `
-      <div class="upg-icon">${u.icon}</div>
-      <div class="upg-info">
-        <div class="upg-name">${u.name}</div>
-        <div class="upg-desc">${u.desc}</div>
-      </div>
-      <button class="upg-btn ${u.bought ? 'bought' : (!can ? 'disabled' : '')}" onclick="buyUpgrade('${u.id}')">
-        ${u.bought ? '✅ КУПЛЕНО' : costStr}
-      </button>
+
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'upg-icon';
+    iconDiv.textContent = u.icon;
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'upg-info';
+    infoDiv.innerHTML = `
+      <div class="upg-name">${u.name}</div>
+      <div class="upg-desc">${u.desc}</div>
     `;
+
+    const btn = document.createElement('button');
+    if (u.bought) {
+      btn.className = 'upg-btn bought';
+      btn.textContent = '✅ КУПЛЕНО';
+    } else {
+      btn.className = 'upg-btn' + (!canBuy ? ' disabled' : '');
+      btn.textContent = costParts;
+    }
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      handleBuyUpgrade(u.id);
+    });
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleBuyUpgrade(u.id);
+    });
+
+    card.appendChild(iconDiv);
+    card.appendChild(infoDiv);
+    card.appendChild(btn);
     grid.appendChild(card);
   });
 }
 
-function buyUpgrade(id) {
+function handleBuyUpgrade(id) {
   const u = UPGRADES.find(x => x.id === id);
-  if (!u || u.bought || !canAfford(u.cost)) return;
-  spend(u.cost);
+  if (!u) return;
+  if (u.bought) { showNotif('✅ Уже куплено!'); return; }
+
+  const missing = [];
+  Object.entries(u.cost).forEach(([r, v]) => {
+    const have = Math.floor(G[r] || 0);
+    const need = Math.ceil(v);
+    if (have < need) {
+      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
+      missing.push(`${need - have} ${icons[r] || r}`);
+    }
+  });
+
+  if (missing.length > 0) {
+    showNotif('❌ Не хватает: ' + missing.join(', '));
+    return;
+  }
+
+  Object.entries(u.cost).forEach(([r, v]) => {
+    G[r] = Math.max(0, (G[r] || 0) - v);
+  });
+
   u.bought = true;
   u.effect();
-  showNotif(`🔬 Улучшение "${u.name}" активировано!`);
+  showNotif(`🔬 "${u.name}" активировано!`);
   renderUpgrades();
   updateUI();
 }
