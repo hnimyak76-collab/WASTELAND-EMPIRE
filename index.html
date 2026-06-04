@@ -1044,20 +1044,6 @@ function updateUI() {
 // ===== RENDER BUILDINGS — полная перезапись =====
 function renderBuildings() {
   const grid = document.getElementById('buildingsGrid');
-
-  // Один раз навешиваем делегат на grid
-  if (!grid._listenerAdded) {
-    grid._listenerAdded = true;
-    grid.addEventListener('click', function(e) {
-      const btn = e.target.closest('[data-buy]');
-      if (btn) doBuy(btn.getAttribute('data-buy'));
-    });
-    grid.addEventListener('touchend', function(e) {
-      const btn = e.target.closest('[data-buy]');
-      if (btn) { e.preventDefault(); doBuy(btn.getAttribute('data-buy')); }
-    });
-  }
-
   const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
 
   grid.innerHTML = BUILDINGS
@@ -1069,22 +1055,25 @@ function renderBuildings() {
       const costStr = Object.entries(cost).map(([r,v]) => fmt(v)+' '+(icons[r]||r)).join(' + ');
       const prodStr = Object.entries(b.production).map(([r,v]) => (v>0?'+':'')+v.toFixed(1)+(icons[r]||r)+'/с').join(' ');
 
+      const btnStyle = maxed
+        ? `background:#111;border:1px solid #444;color:#555;`
+        : canBuy
+          ? `background:linear-gradient(135deg,#2a2410,#1e1a0a);border:1px solid #c8a84b;color:#c8a84b;cursor:pointer;`
+          : `background:#111;border:1px solid #444;color:#555;`;
+
       return `
       <div style="background:#161610;border:1px solid ${canBuy?'rgba(200,168,75,0.5)':'#2a2a1a'};border-radius:4px;padding:12px;display:flex;align-items:center;gap:10px;">
         <div style="font-size:34px;width:46px;text-align:center;flex-shrink:0;">${b.icon}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Russo One',sans-serif;font-size:14px;color:#d4c89a;margin-bottom:2px;">${b.name}</div>
           <div style="font-size:11px;color:#6b6244;margin-bottom:5px;">${b.desc}</div>
-          <div style="font-size:11px;"><span style="color:#c8a84b;">📦 ${b.owned}/${b.maxOwned}</span> <span style="color:#4bba7a;margin-left:8px;">${prodStr}</span></div>
+          <div style="font-size:11px;"><span style="color:#c8a84b;">📦 ${b.owned}/${b.maxOwned}</span><span style="color:#4bba7a;margin-left:8px;">${prodStr}</span></div>
         </div>
-        <div style="flex-shrink:0;text-align:center;">
-          ${maxed
-            ? `<div style="background:#1a1a0e;border:1px solid #444;color:#555;font-family:'Bebas Neue',cursive;font-size:13px;letter-spacing:1px;padding:8px 12px;border-radius:3px;">МАКС</div>`
-            : `<div data-buy="${b.id}" style="background:${canBuy?'linear-gradient(135deg,#2a2410,#1e1a0a)':'#111'};border:1px solid ${canBuy?'#c8a84b':'#444'};color:${canBuy?'#c8a84b':'#555'};font-family:'Bebas Neue',cursive;font-size:13px;letter-spacing:1px;padding:8px 12px;border-radius:3px;cursor:pointer;min-width:75px;user-select:none;-webkit-user-select:none;">
-                КУПИТЬ
-                <div style="font-size:9px;margin-top:2px;letter-spacing:0;">${costStr}</div>
-              </div>`
-          }
+        <div style="flex-shrink:0;text-align:center;min-width:80px;">
+          <div data-buy="${b.id}" style="${btnStyle}font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:1px;padding:10px 8px;border-radius:3px;text-align:center;user-select:none;-webkit-user-select:none;touch-action:manipulation;">
+            ${maxed ? 'МАКС' : 'КУПИТЬ'}
+            <div style="font-size:9px;margin-top:2px;letter-spacing:0;font-family:'Exo 2',sans-serif;">${maxed ? '' : costStr}</div>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -1094,12 +1083,19 @@ function doBuy(id) {
   const b = BUILDINGS.find(x => x.id === id);
   if (!b) return;
   if (b.owned >= b.maxOwned) { showNotif('⛔ Максимум!'); return; }
+
   const cost = getBuildingCost(b);
   const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
+
   const missing = Object.entries(cost)
-    .filter(([r,v]) => Math.floor(G[r]||0) < Math.ceil(v))
+    .filter(([r,v]) => (G[r]||0) < v)
     .map(([r,v]) => `${Math.ceil(v - (G[r]||0))} ${icons[r]||r}`);
-  if (missing.length) { showNotif('❌ Не хватает: ' + missing.join(', ')); return; }
+
+  if (missing.length) {
+    showNotif('❌ Не хватает: ' + missing.join(', '));
+    return;
+  }
+
   Object.entries(cost).forEach(([r,v]) => G[r] = Math.max(0,(G[r]||0)-v));
   b.owned++;
   G.xp += 10;
@@ -1362,6 +1358,16 @@ async function loadProgress(userId) {
 
 // Автосохранение каждые 30 секунд
 setInterval(() => { if(saveUserId) saveProgress(); }, 30000);
+
+// ===== GLOBAL TAP HANDLER для кнопок покупки =====
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-buy]');
+  if (btn) { e.preventDefault(); doBuy(btn.getAttribute('data-buy')); }
+});
+document.addEventListener('touchend', function(e) {
+  const btn = e.target.closest('[data-buy]');
+  if (btn) { e.preventDefault(); doBuy(btn.getAttribute('data-buy')); }
+}, { passive: false });
 
 // ===== INIT =====
 renderBuildings();
