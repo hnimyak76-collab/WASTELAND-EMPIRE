@@ -736,7 +736,7 @@
 <!-- BUILD SCREEN -->
 <div class="screen" id="screen-build">
   <div class="section-title">⚙ СТРОИТЕЛЬСТВО</div>
-  <div class="buildings-grid" id="buildingsGrid"></div>
+  <div id="buildingsGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
 <!-- UPGRADE SCREEN -->
@@ -1041,102 +1041,66 @@ function updateUI() {
   });
 }
 
-// ===== RENDER BUILDINGS =====
+// ===== RENDER BUILDINGS — полная перезапись =====
 function renderBuildings() {
   const grid = document.getElementById('buildingsGrid');
-  grid.innerHTML = '';
 
-  const available = BUILDINGS.filter(b => b.unlockLevel <= G.level);
-
-  if (available.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;font-size:13px;">Тапай больше — откроешь здания!</div>';
-    return;
+  // Один раз навешиваем делегат на grid
+  if (!grid._listenerAdded) {
+    grid._listenerAdded = true;
+    grid.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-buy]');
+      if (btn) doBuy(btn.getAttribute('data-buy'));
+    });
+    grid.addEventListener('touchend', function(e) {
+      const btn = e.target.closest('[data-buy]');
+      if (btn) { e.preventDefault(); doBuy(btn.getAttribute('data-buy')); }
+    });
   }
 
-  available.forEach(b => {
-    const cost = getBuildingCost(b);
-    const canBuy = canAfford(cost) && b.owned < b.maxOwned;
-    const maxed = b.owned >= b.maxOwned;
+  const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
 
-    const costParts = Object.entries(cost).map(([r,v]) => {
-      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
-      return fmt(v) + ' ' + (icons[r] || r);
-    }).join(' + ');
+  grid.innerHTML = BUILDINGS
+    .filter(b => b.unlockLevel <= G.level)
+    .map(b => {
+      const cost = getBuildingCost(b);
+      const canBuy = canAfford(cost) && b.owned < b.maxOwned;
+      const maxed = b.owned >= b.maxOwned;
+      const costStr = Object.entries(cost).map(([r,v]) => fmt(v)+' '+(icons[r]||r)).join(' + ');
+      const prodStr = Object.entries(b.production).map(([r,v]) => (v>0?'+':'')+v.toFixed(1)+(icons[r]||r)+'/с').join(' ');
 
-    const prodParts = Object.entries(b.production).map(([r,v]) => {
-      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
-      return (v > 0 ? '+' : '') + v.toFixed(1) + (icons[r] || r) + '/с';
-    }).join('  ');
-
-    const card = document.createElement('div');
-    card.className = 'building-card' + (canBuy ? ' affordable' : '') + (maxed ? ' maxed' : '');
-
-    const iconDiv = document.createElement('div');
-    iconDiv.className = 'b-icon';
-    iconDiv.textContent = b.icon;
-
-    const infoDiv = document.createElement('div');
-    infoDiv.className = 'b-info';
-    infoDiv.innerHTML = `
-      <div class="b-name">${b.name}</div>
-      <div class="b-desc">${b.desc}</div>
-      <div class="b-stats">
-        <span class="b-owned">📦 ${b.owned}/${b.maxOwned}</span>
-        <span class="b-rate">${prodParts}</span>
-      </div>
-    `;
-
-    const btn = document.createElement('button');
-    btn.className = 'b-buy' + (maxed ? ' disabled' : '');
-    btn.innerHTML = maxed
-      ? '<span>МАКС</span>'
-      : `КУПИТЬ<span class="b-cost" style="display:block;font-size:10px;margin-top:2px;">${costParts}</span>`;
-
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      handleBuyBuilding(b.id);
-    });
-    btn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleBuyBuilding(b.id);
-    });
-
-    card.appendChild(iconDiv);
-    card.appendChild(infoDiv);
-    card.appendChild(btn);
-    grid.appendChild(card);
-  });
+      return `
+      <div style="background:#161610;border:1px solid ${canBuy?'rgba(200,168,75,0.5)':'#2a2a1a'};border-radius:4px;padding:12px;display:flex;align-items:center;gap:10px;">
+        <div style="font-size:34px;width:46px;text-align:center;flex-shrink:0;">${b.icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Russo One',sans-serif;font-size:14px;color:#d4c89a;margin-bottom:2px;">${b.name}</div>
+          <div style="font-size:11px;color:#6b6244;margin-bottom:5px;">${b.desc}</div>
+          <div style="font-size:11px;"><span style="color:#c8a84b;">📦 ${b.owned}/${b.maxOwned}</span> <span style="color:#4bba7a;margin-left:8px;">${prodStr}</span></div>
+        </div>
+        <div style="flex-shrink:0;text-align:center;">
+          ${maxed
+            ? `<div style="background:#1a1a0e;border:1px solid #444;color:#555;font-family:'Bebas Neue',cursive;font-size:13px;letter-spacing:1px;padding:8px 12px;border-radius:3px;">МАКС</div>`
+            : `<div data-buy="${b.id}" style="background:${canBuy?'linear-gradient(135deg,#2a2410,#1e1a0a)':'#111'};border:1px solid ${canBuy?'#c8a84b':'#444'};color:${canBuy?'#c8a84b':'#555'};font-family:'Bebas Neue',cursive;font-size:13px;letter-spacing:1px;padding:8px 12px;border-radius:3px;cursor:pointer;min-width:75px;user-select:none;-webkit-user-select:none;">
+                КУПИТЬ
+                <div style="font-size:9px;margin-top:2px;letter-spacing:0;">${costStr}</div>
+              </div>`
+          }
+        </div>
+      </div>`;
+    }).join('');
 }
 
-function handleBuyBuilding(id) {
+function doBuy(id) {
   const b = BUILDINGS.find(x => x.id === id);
-  if (!b) { showNotif('❌ Здание не найдено'); return; }
-  if (b.owned >= b.maxOwned) { showNotif('⛔ Максимум построено!'); return; }
-
+  if (!b) return;
+  if (b.owned >= b.maxOwned) { showNotif('⛔ Максимум!'); return; }
   const cost = getBuildingCost(b);
-
-  // Проверка по каждому ресурсу
-  const missing = [];
-  Object.entries(cost).forEach(([r, v]) => {
-    const have = Math.floor(G[r] || 0);
-    const need = Math.ceil(v);
-    if (have < need) {
-      const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
-      missing.push(`${need - have} ${icons[r] || r}`);
-    }
-  });
-
-  if (missing.length > 0) {
-    showNotif('❌ Не хватает: ' + missing.join(', '));
-    return;
-  }
-
-  // Списываем ресурсы
-  Object.entries(cost).forEach(([r, v]) => {
-    G[r] = Math.max(0, (G[r] || 0) - v);
-  });
-
+  const icons = { scraps:'🧱', water:'💧', energy:'⚡', pop:'👥' };
+  const missing = Object.entries(cost)
+    .filter(([r,v]) => Math.floor(G[r]||0) < Math.ceil(v))
+    .map(([r,v]) => `${Math.ceil(v - (G[r]||0))} ${icons[r]||r}`);
+  if (missing.length) { showNotif('❌ Не хватает: ' + missing.join(', ')); return; }
+  Object.entries(cost).forEach(([r,v]) => G[r] = Math.max(0,(G[r]||0)-v));
   b.owned++;
   G.xp += 10;
   checkLevel();
